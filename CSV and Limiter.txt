@@ -1,0 +1,30 @@
+this is the script ro generate CSV and limiter (not tested)
+
+
+// Generate CSV report for each order
+func GenerateOrderCSVReport() {
+	// Get all orders
+	orders := reports.GetAllOrders()
+
+	// Generate CSV report for each order
+	for _, order := range orders {
+		report := reports.GenerateOrderReport(order)
+
+		// Save the report as CSV file
+		report.SaveCSV()
+	}
+}
+
+// API rate limiter middleware
+func RateLimiter() echo.MiddlewareFunc {
+	limiter := ratelimiter.NewRateLimiter(100, time.Minute)
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			ip := c.RealIP()
+			if !limiter.Allow(ip) {
+				return echo.NewHTTPError(http.StatusTooManyRequests, "Too many requests")
+			}
+			return next(c)
+		}
+	}
+}
